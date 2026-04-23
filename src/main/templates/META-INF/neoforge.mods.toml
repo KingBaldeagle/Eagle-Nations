@@ -46,7 +46,7 @@ authors="Baldeagle"
 
 # The description text for the mod (multi line!) (#mandatory)
 description='''
-Example mod description.
+Eagle Nations - A political and territory system built on FTB Teams. Transform teams into nations with land control, governments, and diplomacy.
 '''
 
 # The [[mixins]] block allows you to declare your mixin config to FML so that it gets loaded.
@@ -85,6 +85,38 @@ Example mod description.
     type="required"
     # This version range declares a minimum of the current minecraft version up to but not including the next major version
     versionRange="${minecraft_version_range}"
+    ordering="NONE"
+    side="BOTH"
+
+# FTB Teams dependency
+[[dependencies.${mod_id}]]
+    modId="ftbteams"
+    type="required"
+    versionRange="[2101.1.0,)"
+    ordering="AFTER"
+    side="BOTH"
+
+# FTB Library dependency
+[[dependencies.${mod_id}]]
+    modId="ftblibrary"
+    type="required"
+    versionRange="[2101.1.0,)"
+    ordering="AFTER"
+    side="BOTH"
+
+# FTB Chunks dependency
+[[dependencies.${mod_id}]]
+    modId="ftbchunks"
+    type="required"
+    versionRange="[2101.1.0,)"
+    ordering="AFTER"
+    side="BOTH"
+
+# Lightman's Currency dependency
+[[dependencies.${mod_id}]]
+    modId="lightmanscurrency"
+    type="required"
+    versionRange="[1.21,)"
     ordering="NONE"
     side="BOTH"
 

@@ -1,42 +1,45 @@
 package com.baldeagle.eaglenations;
 
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Item;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
-// An example config class. This is not required, but it's a good idea to have one to keep your config organized.
-// Demonstrates how to use Neo's config APIs
 public class Config {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
-    public static final ModConfigSpec.BooleanValue LOG_DIRT_BLOCK = BUILDER
-            .comment("Whether to log the dirt block on common setup")
-            .define("logDirtBlock", true);
+    public static final ModConfigSpec.BooleanValue ENABLED = BUILDER
+            .comment("Whether Eagle Nations is enabled")
+            .define("enabled", true);
 
-    public static final ModConfigSpec.IntValue MAGIC_NUMBER = BUILDER
-            .comment("A magic number")
-            .defineInRange("magicNumber", 42, 0, Integer.MAX_VALUE);
+    public static final ModConfigSpec.BooleanValue AUTO_CREATE_NATIONS = BUILDER
+            .comment("Automatically create a nation when a new FTB Team is created")
+            .define("autoCreateNations", true);
 
-    public static final ModConfigSpec.ConfigValue<String> MAGIC_NUMBER_INTRODUCTION = BUILDER
-            .comment("What you want the introduction message to be for the magic number")
-            .define("magicNumberIntroduction", "The magic number is... ");
+    public static final ModConfigSpec.BooleanValue ENABLE_WAR_SYSTEM = BUILDER
+            .comment("Enable war declarations and PvP rules between nations")
+            .define("enableWarSystem", true);
 
-    // a list of strings that are treated as resource locations for items
-    public static final ModConfigSpec.ConfigValue<List<? extends String>> ITEM_STRINGS = BUILDER
-            .comment("A list of items to log on common setup.")
-            .defineListAllowEmpty("items", List.of("minecraft:iron_ingot"), () -> "", Config::validateItemName);
+    public static final ModConfigSpec.BooleanValue ENABLE_TERRITORY_SYSTEM = BUILDER
+            .comment("Enable chunk claiming and territory control")
+            .define("enableTerritorySystem", true);
+
+    public static final ModConfigSpec.IntValue MAX_TERRITORY_DISTANCE = BUILDER
+            .comment("Maximum distance from capital for territory claims")
+            .defineInRange("maxTerritoryDistance", 10, 1, 100);
+
+    public static final ModConfigSpec.IntValue MIN_TEAM_SIZE_FOR_NATION = BUILDER
+            .comment("Minimum team size required to form a nation")
+            .defineInRange("minTeamSizeForNation", 2, 1, 100);
+
+    public static final ModConfigSpec.BooleanValue ENABLE_TAXES = BUILDER
+            .comment("Enable nation taxes and treasury")
+            .define("enableTaxes", true);
+
+    public static final ModConfigSpec.BooleanValue ENABLE_RANKS = BUILDER
+            .comment("Enable custom nation ranks and permissions")
+            .define("enableRanks", true);
+
+    public static final ModConfigSpec.BooleanValue LOG_EVENTS = BUILDER
+            .comment("Log nation events for debugging")
+            .define("logEvents", false);
 
     static final ModConfigSpec SPEC = BUILDER.build();
-
-    private static boolean validateItemName(final Object obj) {
-        return obj instanceof String itemName && BuiltInRegistries.ITEM.containsKey(ResourceLocation.parse(itemName));
-    }
 }

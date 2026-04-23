@@ -28,6 +28,9 @@ sourceSets.main.resources {
 
 repositories {
     // Add here additional repositories if required by some of the dependencies below.
+    flatDir {
+        dirs 'libs'
+    }
 }
 
 base {
@@ -135,6 +138,13 @@ dependencies {
 
     // Example project dependency using a sister or child project:
     // implementation project(":myproject")
+
+    // FTB Teams and required dependencies
+    implementation files("libs/ftb-library-neoforge-2101.1.31.jar")
+    implementation files("libs/ftb-teams-neoforge-2101.1.10.jar")
+    implementation files("libs/ftb-chunks-neoforge-2101.1.14.jar")
+    implementation files("libs/architectury-neoforge-13.0.8.jar")
+    implementation files("libs/lightmanscurrency-neoforge-1.21-2.3.0.4e.jar")
 
     // For more info:
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
