@@ -1,0 +1,13 @@
+{
+  "itemGroup.eaglenations": "Example Mod Tab",
+  "block.eaglenations.example_block": "Example Block",
+  "item.eaglenations.example_item": "Example Item",
+
+  "eaglenations.configuration.title": "Eagle Nations Configs",
+  "eaglenations.configuration.section.eaglenations.common.toml": "Eagle Nations Configs",
+  "eaglenations.configuration.section.eaglenations.common.toml.title": "Eagle Nations Configs",
+  "eaglenations.configuration.items": "Item List",
+  "eaglenations.configuration.logDirtBlock": "Log Dirt Block",
+  "eaglenations.configuration.magicNumberIntroduction": "Magic Number Text",
+  "eaglenations.configuration.magicNumber": "Magic Number"
+}
