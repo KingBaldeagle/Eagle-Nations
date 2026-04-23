@@ -11,6 +11,7 @@ import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import org.slf4j.Logger;
@@ -41,6 +42,12 @@ public class EagleNations {
         }
 
         LOGGER.info("Eagle Nations enabled");
+    }
+
+    @SubscribeEvent
+    public void onRegisterCommands(RegisterCommandsEvent event) {
+        com.baldeagle.eaglenations.commands.NationCommands.register(event.getDispatcher());
+        LOGGER.info("Registered commands");
     }
 
     @SubscribeEvent
