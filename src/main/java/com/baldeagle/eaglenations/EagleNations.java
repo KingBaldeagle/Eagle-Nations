@@ -60,7 +60,7 @@ public class EagleNations {
         LOGGER.info("Loaded {} nations", nationManager.getAllNations().size());
 
         ftbTeamBridge = new FTBTeamBridge(nationManager, server);
-        FTBTeamBridge.register(NeoForge.EVENT_BUS);
+        FTBTeamBridge.register(NeoForge.EVENT_BUS, nationManager, server);
 
         LOGGER.info("Eagle Nations server systems initialized");
     }
