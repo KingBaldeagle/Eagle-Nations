@@ -14,6 +14,19 @@ import net.minecraft.server.level.ServerPlayer;
 
 import java.util.*;
 
+/**
+ * Treasury manages a nation's economy and taxes.
+ * 
+ * Lightman's Currency coin denominations (base unit = copper):
+ * - 10 Copper = 1 Iron
+ * - 10 Iron = 1 Gold
+ * - 10 Gold = 1 Emerald
+ * - 10 Emerald = 1 Diamond
+ * - 10 Diamond = 1 Netherite
+ * 
+ * Core value = total in lowest denomination (copper)
+ * Example: 1 Gold = 10 Iron = 100 Copper = coreValue 100
+ */
 public class Treasury {
     private final UUID nationId;
     private final long nationIdLong;
@@ -22,7 +35,7 @@ public class Treasury {
     
     private double incomeTaxRate = 0.0;
     private double landTaxRate = 0.0;
-    private long landTaxPerChunkCents = 100L;
+    private long landTaxPerChunk = 1L;
     private double tradeTaxRate = 0.0;
     private boolean autoTaxCollect = false;
 
@@ -35,14 +48,14 @@ public class Treasury {
         if (!Config.ENABLE_TAXES.get()) return;
         
         try {
-            linkToBankAccount(server);
+            linkToBankAccount();
             EagleNations.LOGGER.info("Treasury initialized for nation: {}", nationId);
         } catch (Exception e) {
             EagleNations.LOGGER.warn("Could not link bank account for nation {}: {}", nationId, e.getMessage());
         }
     }
 
-    private void linkToBankAccount(MinecraftServer server) {
+    private void linkToBankAccount() {
         try {
             BankAPI api = BankAPI.getApi();
             List<BankReference> references = api.GetAllBankReferences(false);
@@ -88,7 +101,7 @@ public class Treasury {
         return teamBankAccount.getBalanceText().getString();
     }
 
-    public long getTeamBalanceCents() {
+    public long getTeamBalanceValue() {
         if (!hasTeamAccount()) {
             return 0L;
         }
@@ -131,8 +144,8 @@ public class Treasury {
         return total;
     }
 
-    public boolean canAfford(long cents) {
-        return hasTeamAccount() && getTeamBalanceCents() >= cents;
+    public boolean canAfford(long value) {
+        return hasTeamAccount() && getTeamBalanceValue() >= value;
     }
 
     public void setIncomeTaxRate(double rate) {
@@ -143,8 +156,8 @@ public class Treasury {
         this.landTaxRate = Math.max(0, Math.min(1.0, rate));
     }
 
-    public void setLandTaxPerChunk(long cents) {
-        this.landTaxPerChunkCents = cents;
+    public void setLandTaxPerChunk(long value) {
+        this.landTaxPerChunk = Math.max(1, value);
     }
 
     public void setTradeTaxRate(double rate) {
@@ -157,27 +170,27 @@ public class Treasury {
 
     public double getIncomeTaxRate() { return incomeTaxRate; }
     public double getLandTaxRate() { return landTaxRate; }
-    public long getLandTaxPerChunk() { return landTaxPerChunkCents; }
+    public long getLandTaxPerChunk() { return landTaxPerChunk; }
     public double getTradeTaxRate() { return tradeTaxRate; }
     public boolean isAutoTaxCollect() { return autoTaxCollect; }
 
-    public long calculateIncomeTax(long membersTotalCents) {
-        return (long)(membersTotalCents * incomeTaxRate);
+    public long calculateIncomeTax(long membersTotalValue) {
+        return (long)(membersTotalValue * incomeTaxRate);
     }
 
     public long calculateLandTax(int chunkCount) {
-        return chunkCount * landTaxPerChunkCents;
+        return chunkCount * landTaxPerChunk;
     }
 
-    public long calculateTradeTax(long tradeValueCents) {
-        return (long)(tradeValueCents * tradeTaxRate);
+    public long calculateTradeTax(long tradeValue) {
+        return (long)(tradeValue * tradeTaxRate);
     }
 
     public CompoundTag serializeNbt() {
         CompoundTag tag = new CompoundTag();
         tag.putDouble("income_tax_rate", incomeTaxRate);
         tag.putDouble("land_tax_rate", landTaxRate);
-        tag.putLong("land_tax_per_chunk", landTaxPerChunkCents);
+        tag.putLong("land_tax_per_chunk", landTaxPerChunk);
         tag.putDouble("trade_tax_rate", tradeTaxRate);
         tag.putBoolean("auto_tax_collect", autoTaxCollect);
         return tag;
@@ -188,7 +201,7 @@ public class Treasury {
         Treasury treasury = new Treasury(nationId);
         treasury.incomeTaxRate = tag.getDouble("income_tax_rate");
         treasury.landTaxRate = tag.getDouble("land_tax_rate");
-        treasury.landTaxPerChunkCents = tag.getLong("land_tax_per_chunk");
+        treasury.landTaxPerChunk = tag.getLong("land_tax_per_chunk");
         treasury.tradeTaxRate = tag.getDouble("trade_tax_rate");
         treasury.autoTaxCollect = tag.getBoolean("auto_tax_collect");
         return treasury;
