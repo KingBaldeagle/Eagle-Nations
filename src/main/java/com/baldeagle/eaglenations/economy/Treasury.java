@@ -5,18 +5,20 @@ import com.baldeagle.eaglenations.EagleNations;
 import io.github.lightman314.lightmanscurrency.api.money.bank.BankAPI;
 import io.github.lightman314.lightmanscurrency.api.money.bank.IBankAccount;
 import io.github.lightman314.lightmanscurrency.api.money.bank.reference.BankReference;
+import io.github.lightman314.lightmanscurrency.api.money.bank.reference.builtin.PlayerBankReference;
 import io.github.lightman314.lightmanscurrency.api.money.bank.reference.builtin.TeamBankReference;
+import io.github.lightman314.lightmanscurrency.api.money.value.MoneyValue;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class Treasury {
     private final UUID nationId;
     private final long nationIdLong;
-    private IBankAccount bankAccount;
-    private boolean accountLinked = false;
+    private IBankAccount teamBankAccount;
+    private boolean teamAccountLinked = false;
     
     private double incomeTaxRate = 0.0;
     private double landTaxRate = 0.0;
@@ -33,14 +35,14 @@ public class Treasury {
         if (!Config.ENABLE_TAXES.get()) return;
         
         try {
-            linkToBankAccount();
+            linkToBankAccount(server);
             EagleNations.LOGGER.info("Treasury initialized for nation: {}", nationId);
         } catch (Exception e) {
             EagleNations.LOGGER.warn("Could not link bank account for nation {}: {}", nationId, e.getMessage());
         }
     }
 
-    private void linkToBankAccount() {
+    private void linkToBankAccount(MinecraftServer server) {
         try {
             BankAPI api = BankAPI.getApi();
             List<BankReference> references = api.GetAllBankReferences(false);
@@ -48,23 +50,27 @@ public class Treasury {
             for (BankReference ref : references) {
                 if (ref instanceof TeamBankReference teamRef) {
                     if (teamRef.teamID == nationIdLong) {
-                        this.bankAccount = teamRef.get();
-                        this.accountLinked = true;
-                        EagleNations.LOGGER.info("Linked to bank account for nation: {}", nationId);
+                        this.teamBankAccount = teamRef.get();
+                        this.teamAccountLinked = true;
+                        EagleNations.LOGGER.info("Linked to team bank account for nation: {}", nationId);
                         return;
                     }
                 }
             }
             
-            EagleNations.LOGGER.info("No bank account found for nation {}. Tax treasury ready.", nationId);
+            EagleNations.LOGGER.info("No team bank account found for nation {}. Tax treasury ready.", nationId);
             
         } catch (Exception e) {
             EagleNations.LOGGER.warn("Error linking bank account: {}", e.getMessage());
         }
     }
 
-    public boolean hasBankAccount() {
-        return accountLinked && bankAccount != null;
+    public boolean hasTeamAccount() {
+        return teamAccountLinked && teamBankAccount != null;
+    }
+
+    public IBankAccount getTeamAccount() {
+        return teamBankAccount;
     }
 
     public boolean isActive() {
@@ -76,18 +82,57 @@ public class Treasury {
     }
 
     public String getBalanceText() {
-        if (!hasBankAccount()) {
-            return "No account";
+        if (!hasTeamAccount()) {
+            return "No team account";
         }
-        return bankAccount.getBalanceText().getString();
+        return teamBankAccount.getBalanceText().getString();
     }
 
-    public IBankAccount getBankAccount() {
-        return bankAccount;
+    public long getTeamBalanceCents() {
+        if (!hasTeamAccount()) {
+            return 0L;
+        }
+        var values = teamBankAccount.getMoneyStorage().allValues();
+        long total = 0;
+        for (MoneyValue v : values) {
+            total += v.getCoreValue();
+        }
+        return total;
     }
 
-    public BankAPI getBankAPI() {
-        return BankAPI.getApi();
+    public long getTotalMembersMoney(List<ServerPlayer> teamMembers) {
+        long total = 0L;
+        
+        try {
+            BankAPI api = BankAPI.getApi();
+            List<BankReference> references = api.GetAllBankReferences(false);
+            
+            for (ServerPlayer player : teamMembers) {
+                for (BankReference ref : references) {
+                    if (ref instanceof PlayerBankReference playerRef) {
+                        var playerRef2 = playerRef.getPlayer();
+                        if (playerRef2 != null && playerRef2.id.equals(player.getUUID())) {
+                            IBankAccount account = playerRef.get();
+                            if (account != null) {
+                                var values = account.getMoneyStorage().allValues();
+                                for (MoneyValue v : values) {
+                                    total += v.getCoreValue();
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            EagleNations.LOGGER.warn("Error getting member money: {}", e.getMessage());
+        }
+        
+        return total;
+    }
+
+    public boolean canAfford(long cents) {
+        return hasTeamAccount() && getTeamBalanceCents() >= cents;
     }
 
     public void setIncomeTaxRate(double rate) {
@@ -116,8 +161,8 @@ public class Treasury {
     public double getTradeTaxRate() { return tradeTaxRate; }
     public boolean isAutoTaxCollect() { return autoTaxCollect; }
 
-    public long calculateIncomeTax(long playerBalanceCents) {
-        return (long)(playerBalanceCents * incomeTaxRate);
+    public long calculateIncomeTax(long membersTotalCents) {
+        return (long)(membersTotalCents * incomeTaxRate);
     }
 
     public long calculateLandTax(int chunkCount) {
