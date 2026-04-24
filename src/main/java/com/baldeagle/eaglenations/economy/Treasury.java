@@ -35,7 +35,6 @@ public class Treasury {
     
     private double incomeTaxRate = 0.0;
     private double landTaxRate = 0.0;
-    private long landTaxPerChunk = 1L;
     private double tradeTaxRate = 0.0;
     private boolean autoTaxCollect = false;
 
@@ -156,10 +155,6 @@ public class Treasury {
         this.landTaxRate = Math.max(0, Math.min(1.0, rate));
     }
 
-    public void setLandTaxPerChunk(long value) {
-        this.landTaxPerChunk = Math.max(1, value);
-    }
-
     public void setTradeTaxRate(double rate) {
         this.tradeTaxRate = Math.max(0, Math.min(1.0, rate));
     }
@@ -170,7 +165,6 @@ public class Treasury {
 
     public double getIncomeTaxRate() { return incomeTaxRate; }
     public double getLandTaxRate() { return landTaxRate; }
-    public long getLandTaxPerChunk() { return landTaxPerChunk; }
     public double getTradeTaxRate() { return tradeTaxRate; }
     public boolean isAutoTaxCollect() { return autoTaxCollect; }
 
@@ -178,8 +172,63 @@ public class Treasury {
         return (long)(membersTotalValue * incomeTaxRate);
     }
 
+    /**
+     * Calculate land tax based on chunk count.
+     * 
+     * Pricing tiers (first 10 chunks are free):
+     * - Chunks 1-10: 0 (free)
+     * - Chunks 11-12: 1 copper each
+     * - Chunks 13-14: 5 copper each (1 iron)
+     * - Chunks 15-16: 10 copper each (1 iron, 5 copper)
+     * - Chunks 17-18: 15 copper each
+     * 
+     * Price increases by 5 copper every 2 chunks after the first paid tier.
+     * 
+     * @param chunkCount Number of chunks claimed by the team
+     * @return Total tax in copper
+     */
     public long calculateLandTax(int chunkCount) {
-        return chunkCount * landTaxPerChunk;
+        if (chunkCount <= 10) {
+            return 0;
+        }
+        
+        long totalTax = 0;
+        int paidChunks = chunkCount - 10;  // Chunks 11 onwards
+        
+        for (int i = 0; i < paidChunks; i++) {
+            int chunkNumber = i + 11;  // Starting from chunk 11
+            int tier = (chunkNumber - 11) / 2;  // Tier increases every 2 chunks
+            long pricePerChunk;
+            
+            if (tier == 0) {
+                pricePerChunk = 1;  // Chunks 11-12: 1 copper
+            } else {
+                pricePerChunk = tier * 5;  // Chunks 13+: increases by 5 copper per tier
+            }
+            
+            totalTax += pricePerChunk;
+        }
+        
+        return totalTax;
+    }
+    
+    /**
+     * Get the price for a specific chunk number (1-indexed).
+     * @param chunkNumber The chunk number (1-based)
+     * @return Price in copper for that specific chunk
+     */
+    public long getChunkPrice(int chunkNumber) {
+        if (chunkNumber <= 10) {
+            return 0;
+        }
+        
+        int tier = (chunkNumber - 11) / 2;
+        
+        if (tier == 0) {
+            return 1;
+        }
+        
+        return tier * 5;
     }
 
     public long calculateTradeTax(long tradeValue) {
@@ -190,7 +239,6 @@ public class Treasury {
         CompoundTag tag = new CompoundTag();
         tag.putDouble("income_tax_rate", incomeTaxRate);
         tag.putDouble("land_tax_rate", landTaxRate);
-        tag.putLong("land_tax_per_chunk", landTaxPerChunk);
         tag.putDouble("trade_tax_rate", tradeTaxRate);
         tag.putBoolean("auto_tax_collect", autoTaxCollect);
         return tag;
@@ -201,7 +249,6 @@ public class Treasury {
         Treasury treasury = new Treasury(nationId);
         treasury.incomeTaxRate = tag.getDouble("income_tax_rate");
         treasury.landTaxRate = tag.getDouble("land_tax_rate");
-        treasury.landTaxPerChunk = tag.getLong("land_tax_per_chunk");
         treasury.tradeTaxRate = tag.getDouble("trade_tax_rate");
         treasury.autoTaxCollect = tag.getBoolean("auto_tax_collect");
         return treasury;
