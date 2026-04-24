@@ -10,6 +10,7 @@ public class DiplomacyManager {
     private final Map<String, Relation> relations = new ConcurrentHashMap<>();
     private final Map<UUID, List<War>> nationWars = new ConcurrentHashMap<>();
     private final Map<UUID, Set<UUID>> warDeclarations = new ConcurrentHashMap<>();
+    private final Map<UUID, List<War>> warsAgainstUs = new ConcurrentHashMap<>();
     private long warCooldownMs = 24 * 60 * 60 * 1000L; // 24 hours
 
     public void onNationRemoved(UUID nationId) {
@@ -20,6 +21,14 @@ public class DiplomacyManager {
             }
         }
         nationWars.remove(nationId);
+        
+        List<War> defendingWars = warsAgainstUs.get(nationId);
+        if (defendingWars != null) {
+            for (War war : defendingWars) {
+                endWar(war, nationId);
+            }
+        }
+        warsAgainstUs.remove(nationId);
         
         warDeclarations.remove(nationId);
         
@@ -58,6 +67,9 @@ public class DiplomacyManager {
         UUID key = UUID.randomUUID();
         List<War> wars = nationWars.computeIfAbsent(aggressorId, k -> new ArrayList<>());
         wars.add(war);
+        
+        List<War> defensiveWars = warsAgainstUs.computeIfAbsent(defenderId, k -> new ArrayList<>());
+        defensiveWars.add(war);
         
         Set<UUID> targets = warDeclarations.computeIfAbsent(aggressorId, k -> new HashSet<>());
         targets.add(defenderId);
@@ -167,15 +179,23 @@ public class DiplomacyManager {
 
     public War getWar(UUID nationId1, UUID nationId2) {
         List<War> wars = nationWars.get(nationId1);
-        if (wars == null) {
-            return null;
-        }
-        
-        for (War war : wars) {
-            if (war.involvesNation(nationId2) && war.isActive()) {
-                return war;
+        if (wars != null) {
+            for (War war : wars) {
+                if (war.involvesNation(nationId2) && war.isActive()) {
+                    return war;
+                }
             }
         }
+        
+        List<War> defensiveWars = warsAgainstUs.get(nationId1);
+        if (defensiveWars != null) {
+            for (War war : defensiveWars) {
+                if (war.involvesNation(nationId2) && war.isActive()) {
+                    return war;
+                }
+            }
+        }
+        
         return null;
     }
 

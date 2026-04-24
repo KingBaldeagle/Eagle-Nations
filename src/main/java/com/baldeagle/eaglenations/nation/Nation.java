@@ -75,4 +75,8 @@ public class Nation {
         long createdAt = tag.getLong("created_at");
         return new Nation(teamId, displayName, color, createdAt);
     }
+
+    public String rankToString(Object player) {
+        return "CITIZEN";
+    }
 }

@@ -4,9 +4,9 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class LawSystem {
     private UUID ownerNationId;
@@ -14,7 +14,7 @@ public class LawSystem {
 
     public LawSystem(UUID ownerNationId) {
         this.ownerNationId = ownerNationId;
-        this.laws = new ArrayList<>();
+        this.laws = new CopyOnWriteArrayList<>();
         initDefaultLaws();
     }
 

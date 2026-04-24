@@ -30,8 +30,9 @@ public class FTBTeamBridge {
         this.server = server;
     }
 
-    public static void register(IEventBus eventBus) {
-        eventBus.register(new FTBTeamBridge(null, null));
+    public static void register(IEventBus eventBus, NationManager nationManager, MinecraftServer server) {
+        FTBTeamBridge bridge = new FTBTeamBridge(nationManager, server);
+        eventBus.register(bridge);
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)

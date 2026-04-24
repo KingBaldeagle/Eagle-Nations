@@ -121,5 +121,8 @@ public class NationManager {
     }
 
     private void markDirty() {
+        if (server != null) {
+            server.markAsDirty(server.getWorldPath(DATA_RESOURCE));
+        }
     }
 }

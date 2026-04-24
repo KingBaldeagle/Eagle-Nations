@@ -127,11 +127,27 @@ public class War {
     }
 
     public static War deserializeNbt(CompoundTag tag) {
+        UUID warId = tag.getUUID("war_id");
         UUID aggressorId = tag.getUUID("aggressor");
         UUID defenderId = tag.getUUID("defender");
         War war = new War(aggressorId, defenderId);
         war.setState(WarState.valueOf(tag.getString("state")));
         war.setWarGoal(tag.getString("war_goal"));
+        if (tag.contains("started_at")) {
+            war.startedAt = tag.getLong("started_at");
+        }
+        if (tag.contains("ended_at")) {
+            war.endedAt = tag.getLong("ended_at");
+        }
+        if (tag.contains("aggressive_score")) {
+            war.aggressiveScore = tag.getInt("aggressive_score");
+        }
+        if (tag.contains("defensive_score")) {
+            war.defensiveScore = tag.getInt("defensive_score");
+        }
+        if (tag.contains("win_condition")) {
+            war.winCondition = tag.getInt("win_condition");
+        }
         return war;
     }
 }
